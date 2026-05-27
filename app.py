@@ -1,145 +1,165 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+from io import BytesIO
 
 # =========================================================
 # PAGE SETUP
 # =========================================================
-st.set_page_config(
-    page_title="Operations Dashboard",
-    layout="wide"
-)
-
+st.set_page_config(page_title="Operations Dashboard", layout="wide")
 st.title("⚙️ Operations Dashboard")
 
-st.write("Select a tool below")
-
 # =========================================================
-# TOOL FUNCTIONS
+# SESSION STATE INIT
 # =========================================================
-
-def run_control_file_master():
-
-    st.header("📊 Control File Master")
-
-    st.write("Run Control File Master logic here")
-
-    uploaded_files = st.file_uploader(
-        "Upload files",
-        accept_multiple_files=True,
-        key="cfm"
-    )
-
-    if uploaded_files:
-
-        if st.button("Run Control File Master"):
-
-            st.success("✅ Control File Master completed")
-
-
-def run_project_tracker():
-
-    st.header("📁 Project Tracker")
-
-    uploaded_files = st.file_uploader(
-        "Upload tracker files",
-        accept_multiple_files=True,
-        key="pt"
-    )
-
-    if uploaded_files:
-
-        if st.button("Run Project Tracker"):
-
-            st.success("✅ Project Tracker completed")
-
-
-def run_merge_control_tracker():
-
-    st.header("🔀 Merge Control File Tracker")
-
-    uploaded_files = st.file_uploader(
-        "Upload merge files",
-        accept_multiple_files=True,
-        key="merge"
-    )
-
-    if uploaded_files:
-
-        if st.button("Run Merge"):
-
-            st.success("✅ Merge completed")
-
-
-def run_outputs():
-
-    st.header("📤 Outputs")
-
-    uploaded_files = st.file_uploader(
-        "Upload output files",
-        accept_multiple_files=True,
-        key="outputs"
-    )
-
-    if uploaded_files:
-
-        if st.button("Generate Outputs"):
-
-            st.success("✅ Outputs generated")
-
-
-def run_target_price_reader():
-
-    st.header("💰 Target Price Reader")
-
-    uploaded_files = st.file_uploader(
-        "Upload pricing files",
-        accept_multiple_files=True,
-        key="tp"
-    )
-
-    if uploaded_files:
-
-        if st.button("Read Target Prices"):
-
-            st.success("✅ Target prices processed")
-
-
-def run_workbank():
-
-    st.header("🏗️ Workbank")
-
-    uploaded_files = st.file_uploader(
-        "Upload workbank files",
-        accept_multiple_files=True,
-        key="workbank"
-    )
-
-    if uploaded_files:
-
-        if st.button("Run Workbank"):
-
-            st.success("✅ Workbank completed")
+if "output_file" not in st.session_state:
+    st.session_state.output_file = None
 
 
 # =========================================================
-# MAIN BUTTON GRID
+# TOOL 1 — CONTROL FILE MASTER
+# =========================================================
+def control_file_master(uploaded_files):
+
+    aggregated_df = pd.DataFrame()
+
+    for file in uploaded_files:
+        df = pd.read_excel(file)
+        df["sourcefile"] = file.name
+        aggregated_df = pd.concat([aggregated_df, df], ignore_index=True)
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        aggregated_df.to_excel(writer, index=False, sheet_name="Aggregated")
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
+# TOOL 2 — PROJECT TRACKER (placeholder logic)
+# =========================================================
+def project_tracker(uploaded_files):
+
+    df_all = pd.DataFrame()
+
+    for file in uploaded_files:
+        df = pd.read_excel(file)
+        df["sourcefile"] = file.name
+        df_all = pd.concat([df_all, df], ignore_index=True)
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df_all.to_excel(writer, index=False)
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
+# TOOL 3 — MERGE CONTROL FILE TRACKER
+# =========================================================
+def merge_control_files(uploaded_files):
+
+    df_all = pd.concat(
+        [pd.read_excel(f) for f in uploaded_files],
+        ignore_index=True
+    )
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df_all.to_excel(writer, index=False)
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
+# TOOL 4 — OUTPUTS
+# =========================================================
+def outputs_tool(uploaded_files):
+
+    df_all = pd.DataFrame()
+
+    for f in uploaded_files:
+        df = pd.read_excel(f)
+        df_all = pd.concat([df_all, df], ignore_index=True)
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df_all.to_excel(writer, index=False)
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
+# TOOL 5 — TARGET PRICE READER
+# =========================================================
+def target_price_reader(uploaded_files):
+
+    df_all = pd.DataFrame()
+
+    for f in uploaded_files:
+        df = pd.read_excel(f)
+        df_all = pd.concat([df_all, df], ignore_index=True)
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df_all.to_excel(writer, index=False)
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
+# TOOL 6 — WORKBANK
+# =========================================================
+def workbank(uploaded_files):
+
+    df_all = pd.DataFrame()
+
+    for f in uploaded_files:
+        df = pd.read_excel(f)
+        df_all = pd.concat([df_all, df], ignore_index=True)
+
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        df_all.to_excel(writer, index=False)
+
+    output.seek(0)
+
+    return output
+
+
+# =========================================================
+# UI MENU (BUTTONS)
 # =========================================================
 
-st.divider()
+st.subheader("Select Tool")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-
     if st.button("📊 Control File Master"):
         st.session_state.tool = "control"
 
 with col2:
-
     if st.button("📁 Project Tracker"):
         st.session_state.tool = "tracker"
 
 with col3:
-
     if st.button("🔀 Merge Control Tracker"):
         st.session_state.tool = "merge"
 
@@ -147,49 +167,176 @@ with col3:
 col4, col5, col6 = st.columns(3)
 
 with col4:
-
     if st.button("📤 Outputs"):
         st.session_state.tool = "outputs"
 
 with col5:
-
     if st.button("💰 Target Price Reader"):
         st.session_state.tool = "target"
 
 with col6:
-
     if st.button("🏗️ Workbank"):
         st.session_state.tool = "workbank"
 
 
+st.divider()
+
+
 # =========================================================
-# ROUTER
+# ROUTER (RUN SELECTED TOOL)
 # =========================================================
 
-if "tool" not in st.session_state:
+tool = st.session_state.get("tool", None)
 
-    st.info("Select a tool to begin")
+if not tool:
+    st.info("Click a tool above to begin")
 
-elif st.session_state.tool == "control":
+# =========================================================
+# CONTROL FILE MASTER
+# =========================================================
+elif tool == "control":
 
-    run_control_file_master()
+    st.header("📊 Control File Master")
 
-elif st.session_state.tool == "tracker":
+    uploaded_files = st.file_uploader(
+        "Upload Excel files",
+        type=["xlsx", "xlsm", "xls", "xlsb"],
+        accept_multiple_files=True,
+        key="control_upload"
+    )
 
-    run_project_tracker()
+    if uploaded_files and st.button("Run Control File Master"):
 
-elif st.session_state.tool == "merge":
+        result = control_file_master(uploaded_files)
 
-    run_merge_control_tracker()
+        st.download_button(
+            "📥 Download Output",
+            result,
+            file_name="control_file_master.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-elif st.session_state.tool == "outputs":
 
-    run_outputs()
+# =========================================================
+# PROJECT TRACKER
+# =========================================================
+elif tool == "tracker":
 
-elif st.session_state.tool == "target":
+    st.header("📁 Project Tracker")
 
-    run_target_price_reader()
+    uploaded_files = st.file_uploader(
+        "Upload files",
+        accept_multiple_files=True,
+        key="tracker_upload"
+    )
 
-elif st.session_state.tool == "workbank":
+    if uploaded_files and st.button("Run Project Tracker"):
 
-    run_workbank()
+        result = project_tracker(uploaded_files)
+
+        st.download_button(
+            "📥 Download Output",
+            result,
+            file_name="project_tracker.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+
+# =========================================================
+# MERGE CONTROL
+# =========================================================
+elif tool == "merge":
+
+    st.header("🔀 Merge Control File Tracker")
+
+    uploaded_files = st.file_uploader(
+        "Upload files",
+        accept_multiple_files=True,
+        key="merge_upload"
+    )
+
+    if uploaded_files and st.button("Run Merge"):
+
+        result = merge_control_files(uploaded_files)
+
+        st.download_button(
+            "📥 Download Output",
+            result,
+            file_name="merge_output.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+
+# =========================================================
+# OUTPUTS
+# =========================================================
+elif tool == "outputs":
+
+    st.header("📤 Outputs")
+
+    uploaded_files = st.file_uploader(
+        "Upload files",
+        accept_multiple_files=True,
+        key="outputs_upload"
+    )
+
+    if uploaded_files and st.button("Generate Outputs"):
+
+        result = outputs_tool(uploaded_files)
+
+        st.download_button(
+            "📥 Download Output",
+            result,
+            file_name="outputs.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+
+# =========================================================
+# TARGET PRICE
+# =========================================================
+elif tool == "target":
+
+    st.header("💰 Target Price Reader")
+
+    uploaded_files = st.file_uploader(
+        "Upload files",
+        accept_multiple_files=True,
+        key="target_upload"
+    )
+
+    if uploaded_files and st.button("Run Target Price Reader"):
+
+        result = target_price_reader(uploaded_files)
+
+        st.download_button(
+            "📥 Download Output",
+            result,
+            file_name="target_price.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+
+# =========================================================
+# WORKBANK
+# =========================================================
+elif tool == "workbank":
+
+    st.header("🏗️ Workbank")
+
+    uploaded_files = st.file_uploader(
+        "Upload files",
+        accept_multiple_files=True,
+        key="workbank_upload"
+    )
+
+    if uploaded_files and st.button("Run Workbank"):
+
+        result = workbank(uploaded_files)
+
+        st.download_button(
+            "📥 Download Output",
+            result,
+            file_name="workbank.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
