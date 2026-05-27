@@ -1,515 +1,195 @@
 import streamlit as st
-import pandas as pd
-import os
-import re
-import numpy as np
-from io import BytesIO
 
-# ---------------- PAGE CONFIG ----------------
+# =========================================================
+# PAGE SETUP
+# =========================================================
 st.set_page_config(
-    page_title="Excel Aggregator",
+    page_title="Operations Dashboard",
     layout="wide"
 )
 
-st.title("📊 Excel Aggregator Tool")
+st.title("⚙️ Operations Dashboard")
 
-# ---------------- Utility Functions ----------------
-def parse_excel_date(x):
-    try:
-        if pd.isna(x):
-            return np.nan
+st.write("Select a tool below")
 
-        if isinstance(x, (int, float)):
-            return pd.to_datetime(
-                x,
-                origin="1899-12-30",
-                unit="D",
-                errors="coerce"
-            )
+# =========================================================
+# TOOL FUNCTIONS
+# =========================================================
 
-        return pd.to_datetime(str(x), errors="coerce")
+def run_control_file_master():
 
-    except Exception:
-        return np.nan
+    st.header("📊 Control File Master")
 
+    st.write("Run Control File Master logic here")
 
-def parse_segment_info(segment_str, project_mapping, default_pm=""):
+    uploaded_files = st.file_uploader(
+        "Upload files",
+        accept_multiple_files=True,
+        key="cfm"
+    )
 
-    if not isinstance(segment_str, str) or not segment_str.strip():
-        return pd.Series([None, None, None, default_pm])
+    if uploaded_files:
 
-    segment_str = segment_str.strip()
+        if st.button("Run Control File Master"):
 
-    # Extract type
-    type_match = re.match(r"^\s*([MC])\s*-\s*", segment_str)
-    segment_type = type_match.group(1) if type_match else None
+            st.success("✅ Control File Master completed")
 
-    # Extract code
-    code_match = re.search(r"\b([A-Z]{0,3}\d{5})\b", segment_str)
-    segment_code = code_match.group(1) if code_match else None
 
-    # Description cleanup
-    segment_desc = re.sub(r"^\s*[MC]\s*-\s*", "", segment_str)
+def run_project_tracker():
 
-    if segment_code:
-        segment_desc = re.sub(
-            re.escape(segment_code),
-            "",
-            segment_desc
-        )
+    st.header("📁 Project Tracker")
 
-    segment_desc = re.sub(
-        r"\s+",
-        " ",
-        segment_desc
-    ).strip(" -")
+    uploaded_files = st.file_uploader(
+        "Upload tracker files",
+        accept_multiple_files=True,
+        key="pt"
+    )
 
-    # Detect PM
-    project_manager = ""
+    if uploaded_files:
 
-    for pm, (pm_shire, pm_project) in project_mapping.items():
+        if st.button("Run Project Tracker"):
 
-        if pm.lower() in segment_str.lower():
+            st.success("✅ Project Tracker completed")
 
-            project_manager = pm
 
-            segment_desc = re.sub(
-                re.escape(pm),
-                "",
-                segment_desc,
-                flags=re.IGNORECASE
-            )
+def run_merge_control_tracker():
 
-            break
+    st.header("🔀 Merge Control File Tracker")
 
-    if not project_manager and default_pm:
-        project_manager = default_pm
+    uploaded_files = st.file_uploader(
+        "Upload merge files",
+        accept_multiple_files=True,
+        key="merge"
+    )
 
-    segment_desc = re.sub(
-        r"\s+",
-        " ",
-        segment_desc
-    ).strip(" -")
+    if uploaded_files:
 
-    return pd.Series([
-        segment_type,
-        segment_desc,
-        segment_code,
-        project_manager
-    ])
+        if st.button("Run Merge"):
 
+            st.success("✅ Merge completed")
 
-def extract_project_shire(filename):
 
-    filename_lower = filename.lower()
+def run_outputs():
 
-    for key, value in file_project_mapping.items():
+    st.header("📤 Outputs")
 
-        if key.lower() in filename_lower:
+    uploaded_files = st.file_uploader(
+        "Upload output files",
+        accept_multiple_files=True,
+        key="outputs"
+    )
 
-            shire, project = value
-            return project, shire
+    if uploaded_files:
 
-    return "", ""
+        if st.button("Generate Outputs"):
 
+            st.success("✅ Outputs generated")
 
-def extract_location(segment_desc):
 
-    if not isinstance(segment_desc, str):
-        return ""
+def run_target_price_reader():
 
-    segment_desc_lower = segment_desc.lower()
+    st.header("💰 Target Price Reader")
 
-    for key, locations in mapping_region.items():
+    uploaded_files = st.file_uploader(
+        "Upload pricing files",
+        accept_multiple_files=True,
+        key="tp"
+    )
 
-        if key.lower() in segment_desc_lower:
-            return ", ".join(locations)
+    if uploaded_files:
 
-    return ""
+        if st.button("Read Target Prices"):
 
+            st.success("✅ Target prices processed")
 
-def map_teams(codes):
 
-    if pd.isna(codes):
-        return "UNKNOWN"
+def run_workbank():
 
-    codes = str(codes).upper().strip()
+    st.header("🏗️ Workbank")
 
-    if codes == "" or codes == "NAN":
-        return "UNKNOWN"
+    uploaded_files = st.file_uploader(
+        "Upload workbank files",
+        accept_multiple_files=True,
+        key="workbank"
+    )
 
-    names = []
+    if uploaded_files:
 
-    for char in codes:
+        if st.button("Run Workbank"):
 
-        if char in teams:
-            names.extend(teams[char])
+            st.success("✅ Workbank completed")
 
-    return ", ".join(names) if names else "UNKNOWN"
 
+# =========================================================
+# MAIN BUTTON GRID
+# =========================================================
 
-# ---------------- MAPPINGS ----------------
+st.divider()
 
-project_mapping = {
-    "Lee Fraser": ["Ayrshire", "Connections"],
-    "Gary MacDonald": ["Ayrshire", "LV"],
-    "Jim Gaffney": ["Lanark", "PCB"]
-}
+col1, col2, col3 = st.columns(3)
 
-mapping_region = {
-    "Newmilns": ["Irvine Valley"],
-    "Kilwinning": ["Kilwinning"],
-    "Ayr": ["Ayr East", "Ayr North", "Ayr West"]
-}
+with col1:
 
-teams = {
-    "A": ["Paulo Marques"],
-    "B": ["Rui Rocha"],
-    "C": ["Craig Kerr"],
-    "D": ["Robert Urie"],
-    "E": ["Alistair Mcpherson"],
-    "F": ["Kenny Campbell"],
-    "S": ["Sub contracted"]
-}
+    if st.button("📊 Control File Master"):
+        st.session_state.tool = "control"
 
-file_project_mapping = {
-    "Connections 2025": ["Ayrshire", "Connections"],
-    "PCB 2025 Ayrshire": ["Ayrshire", "PCB"],
-    "Lanark 2025_Connections": ["Lanark", "Connections"]
-}
+with col2:
 
-mapping_dict = {
-    "9x220 BIOCIDE LV POLE": "9m B",
-    "9x275 BIOCIDE LV POLE": "9s B"
-}
+    if st.button("📁 Project Tracker"):
+        st.session_state.tool = "tracker"
 
-# ---------------- FILE UPLOAD ----------------
+with col3:
 
-uploaded_files = st.file_uploader(
-    "Upload Excel files",
-    type=["xlsx", "xlsm", "xls", "xlsb"],
-    accept_multiple_files=True
-)
+    if st.button("🔀 Merge Control Tracker"):
+        st.session_state.tool = "merge"
 
-# ---------------- PROCESS FILES ----------------
 
-if uploaded_files:
+col4, col5, col6 = st.columns(3)
 
-    aggregated_df = pd.DataFrame()
-    resume_list_dfs = []
+with col4:
 
-    progress_bar = st.progress(0)
+    if st.button("📤 Outputs"):
+        st.session_state.tool = "outputs"
 
-    for idx, uploaded_file in enumerate(uploaded_files):
+with col5:
 
-        file_name = uploaded_file.name
-        ext = os.path.splitext(file_name)[1].lower()
+    if st.button("💰 Target Price Reader"):
+        st.session_state.tool = "target"
 
-        st.write(f"📘 Reading file: {file_name}")
+with col6:
 
-        # Detect project + shire
-        project, shire = extract_project_shire(file_name)
+    if st.button("🏗️ Workbank"):
+        st.session_state.tool = "workbank"
 
-        st.write(f"➡️ Project: {project} | Shire: {shire}")
 
-        # ---------------- BLOCK1 ----------------
-        try:
+# =========================================================
+# ROUTER
+# =========================================================
 
-            read_kwargs = dict(
-                sheet_name="Block1",
-                header=2,
-                skiprows=range(3, 29),
-                usecols="A,B,C,D,E,F,U,V,AL,AM,AO,CG,CH"
-            )
+if "tool" not in st.session_state:
 
-            if ext == ".xlsb":
-                read_kwargs["engine"] = "pyxlsb"
+    st.info("Select a tool to begin")
 
-            df = pd.read_excel(
-                uploaded_file,
-                **read_kwargs
-            )
+elif st.session_state.tool == "control":
 
-            df.columns = df.columns.str.strip().str.lower()
+    run_control_file_master()
 
-            # Drop invalid rows
-            col_a_name = df.columns[0]
+elif st.session_state.tool == "tracker":
 
-            df = df[
-                ~df[col_a_name]
-                .astype(str)
-                .str.lower()
-                .isin(['stop'])
-            ]
+    run_project_tracker()
 
-            df = df[df[col_a_name].notna()]
+elif st.session_state.tool == "merge":
 
-            # Parse dates
-            if 'plan1' in df.columns:
-                df['plan1'] = df['plan1'].apply(parse_excel_date)
+    run_merge_control_tracker()
 
-            if 'done' in df.columns:
-                df['done'] = df['done'].apply(parse_excel_date)
+elif st.session_state.tool == "outputs":
 
-            if 'done' in df.columns and 'plan1' in df.columns:
-                df['datetouse'] = df['done'].combine_first(df['plan1'])
+    run_outputs()
 
-            # Other date columns
-            date_cols = [
-                c for c in df.columns
-                if c.startswith('date')
-            ]
+elif st.session_state.tool == "target":
 
-            for col in date_cols:
-                df[col] = df[col].apply(parse_excel_date)
+    run_target_price_reader()
 
-            # Segment parsing
-            if 'segment' in df.columns:
+elif st.session_state.tool == "workbank":
 
-                df[
-                    [
-                        'type',
-                        'segmentdesc',
-                        'segmentcode',
-                        'projectmanager'
-                    ]
-                ] = df['segment'].apply(
-                    lambda x: parse_segment_info(
-                        x,
-                        project_mapping
-                    )
-                )
-
-            # Add metadata
-            df['project'] = project
-            df['shire'] = shire
-
-            df['location'] = df['segmentdesc'].apply(
-                extract_location
-            )
-
-            df['region'] = df['location'].where(
-                df['location'].notna() &
-                (df['location'] != ""),
-                df['shire']
-            )
-
-            df['sourcefile'] = file_name
-
-            # Teams
-            if 'team' in df.columns:
-
-                df['team'] = (
-                    df['team']
-                    .astype(str)
-                    .str.strip()
-                    .str.upper()
-                )
-
-                df['team_name'] = df['team'].apply(map_teams)
-
-            # Mapping
-            if 'item' in df.columns:
-
-                df['mapped'] = (
-                    df['item']
-                    .map(mapping_dict)
-                    .fillna(df['item'])
-                )
-
-                for col in ['qty', 'qsub']:
-
-                    if col in df.columns:
-
-                        df.loc[
-                            df['item'].str.contains(
-                                'H POLE',
-                                na=False
-                            ),
-                            col
-                        ] *= 2
-
-            aggregated_df = pd.concat(
-                [aggregated_df, df],
-                ignore_index=True
-            )
-
-            st.success(f"✅ Block1 loaded — {len(df)} rows")
-
-        except Exception as e:
-
-            st.error(f"❌ Error reading Block1: {e}")
-
-        # ---------------- PA CONTROL ----------------
-        try:
-
-            pa_kwargs = dict(
-                sheet_name="PA CONTROL",
-                header=0,
-                skiprows=1,
-                usecols=[0, 2, 4]
-            )
-
-            if ext == ".xlsb":
-                pa_kwargs["engine"] = "pyxlsb"
-
-            pa_df = pd.read_excel(
-                uploaded_file,
-                **pa_kwargs
-            )
-
-            pa_df.columns = [
-                "section",
-                "value_eur",
-                "completion"
-            ]
-
-            # Keep only MC sections
-            pa_df = pa_df[
-                pa_df['section']
-                .astype(str)
-                .str.match(r'^[MC]', na=False)
-            ]
-
-            # Numeric conversion
-            pa_df['value_eur'] = pd.to_numeric(
-                pa_df['value_eur'],
-                errors='coerce'
-            )
-
-            pa_df['completion'] = pd.to_numeric(
-                pa_df['completion'],
-                errors='coerce'
-            )
-
-            pa_df['%complete'] = (
-                pa_df['completion']
-                /
-                pa_df['value_eur'].replace(0, np.nan)
-            ) * 100
-
-            # Parse segment info
-            pa_df[
-                [
-                    'type',
-                    'segmentdesc',
-                    'segmentcode',
-                    'projectmanager'
-                ]
-            ] = pa_df['section'].apply(
-                lambda x: parse_segment_info(
-                    x,
-                    project_mapping
-                )
-            )
-
-            # Metadata
-            pa_df['project'] = project
-            pa_df['shire'] = shire
-
-            pa_df['location'] = pa_df['segmentdesc'].apply(
-                extract_location
-            )
-
-            pa_df['region'] = pa_df['location'].where(
-                pa_df['location'].notna() &
-                (pa_df['location'] != ""),
-                pa_df['shire']
-            )
-
-            pa_df['sourcefile'] = file_name
-
-            # Append
-            resume_list_dfs.append(pa_df)
-
-            st.success(
-                f"✅ PA CONTROL loaded — {len(pa_df)} rows"
-            )
-
-        except Exception as e:
-
-            st.warning(
-                f"⚠️ Could not read PA CONTROL: {e}"
-            )
-
-        progress_bar.progress(
-            (idx + 1) / len(uploaded_files)
-        )
-
-    # ---------------- OUTPUT ----------------
-    if not aggregated_df.empty:
-
-        if 'datetouse' in aggregated_df.columns:
-
-            aggregated_df = aggregated_df.sort_values(
-                by='datetouse'
-            ).reset_index(drop=True)
-
-        # ---------------- Excel Output ----------------
-        excel_buffer = BytesIO()
-
-        with pd.ExcelWriter(
-            excel_buffer,
-            engine="xlsxwriter"
-        ) as writer:
-
-            aggregated_df.to_excel(
-                writer,
-                index=False,
-                sheet_name="Aggregated"
-            )
-
-            if resume_list_dfs:
-
-                resume_df = pd.concat(
-                    resume_list_dfs,
-                    ignore_index=True
-                )
-
-                resume_df.to_excel(
-                    writer,
-                    index=False,
-                    sheet_name="Resume"
-                )
-
-        excel_buffer.seek(0)
-
-        st.download_button(
-            label="📥 Download Aggregated Excel",
-            data=excel_buffer,
-            file_name="aggregated_output.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-        # ---------------- Parquet Output ----------------
-        parquet_buffer = BytesIO()
-
-        agg_df_copy = aggregated_df.copy()
-
-        for col in agg_df_copy.select_dtypes(
-            include=['object']
-        ).columns:
-
-            agg_df_copy[col] = agg_df_copy[col].astype(str)
-
-        agg_df_copy.to_parquet(
-            parquet_buffer,
-            index=False
-        )
-
-        parquet_buffer.seek(0)
-
-        st.download_button(
-            label="📥 Download Aggregated Parquet",
-            data=parquet_buffer,
-            file_name="aggregated.parquet",
-            mime="application/octet-stream"
-        )
-
-        st.success("✅ Processing complete")
-
-    else:
-        st.warning("⚠️ No valid data found")
-
-else:
-    st.info("Upload Excel files to begin")
+    run_workbank()
