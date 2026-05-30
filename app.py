@@ -15,12 +15,12 @@ st.set_page_config(
 # ======================================================
 
 try:
-    from modules.control_file_master import run_control_file_master
-    from modules.project_tracker import run_project_tracker
-    from modules.merge_control_tracker import run_merge_control_tracker
-    from modules.outputs import run_outputs
-    from modules.target_price_reader import run_target_price_reader
-    from modules.workbank import run_workbank
+    from control_file_master import run_control_file_master
+    from project_tracker import run_project_tracker
+    from merge_control_tracker import run_merge_control_tracker
+    from outputs import run_outputs
+    from target_price_reader import run_target_price_reader
+    from workbank import run_workbank
 
 except Exception:
     st.error("Failed to import one or more modules.")
