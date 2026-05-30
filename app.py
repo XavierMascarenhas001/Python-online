@@ -1,11 +1,5 @@
 import streamlit as st
-
-from modules.control_file_master import run_control_file_master
-from modules.project_tracker import run_project_tracker
-from modules.merge_control_tracker import run_merge_control_tracker
-from modules.outputs import run_outputs
-from modules.target_price_reader import run_target_price_reader
-from modules.workbank import run_workbank
+import traceback
 
 # ======================================================
 # PAGE CONFIG
@@ -15,6 +9,27 @@ st.set_page_config(
     page_title="Operations Dashboard",
     layout="wide"
 )
+
+# ======================================================
+# IMPORT MODULES
+# ======================================================
+
+try:
+    from modules.control_file_master import run_control_file_master
+    from modules.project_tracker import run_project_tracker
+    from modules.merge_control_tracker import run_merge_control_tracker
+    from modules.outputs import run_outputs
+    from modules.target_price_reader import run_target_price_reader
+    from modules.workbank import run_workbank
+
+except Exception as e:
+    st.error("Module import failed.")
+    st.code(traceback.format_exc())
+    st.stop()
+
+# ======================================================
+# TITLE
+# ======================================================
 
 st.title("📊 Operations Dashboard")
 
@@ -62,14 +77,14 @@ st.divider()
 # VALIDATION
 # ======================================================
 
-if (
-    run_control
-    or run_tracker
-    or run_merge
-    or run_output_btn
-    or run_target
-    or run_workbank_btn
-):
+if any([
+    run_control,
+    run_tracker,
+    run_merge,
+    run_output_btn,
+    run_target,
+    run_workbank_btn
+]):
     if not uploaded_files:
         st.warning("Please upload files first.")
         st.stop()
@@ -78,20 +93,26 @@ if (
 # MODULE EXECUTION
 # ======================================================
 
-if run_control:
-    run_control_file_master(uploaded_files)
+try:
 
-if run_tracker:
-    run_project_tracker(uploaded_files)
+    if run_control:
+        run_control_file_master(uploaded_files)
 
-if run_merge:
-    run_merge_control_tracker(uploaded_files)
+    if run_tracker:
+        run_project_tracker(uploaded_files)
 
-if run_output_btn:
-    run_outputs(uploaded_files)
+    if run_merge:
+        run_merge_control_tracker(uploaded_files)
 
-if run_target:
-    run_target_price_reader(uploaded_files)
+    if run_output_btn:
+        run_outputs(uploaded_files)
 
-if run_workbank_btn:
-    run_workbank(uploaded_files)
+    if run_target:
+        run_target_price_reader(uploaded_files)
+
+    if run_workbank_btn:
+        run_workbank(uploaded_files)
+
+except Exception:
+    st.error("An error occurred while running the selected module.")
+    st.code(traceback.format_exc())
